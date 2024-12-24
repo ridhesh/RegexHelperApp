@@ -1,0 +1,78 @@
+from flask import Flask, request, render_template
+import pandas as pd
+import re
+
+app = Flask(__name__)
+
+# Predefined regex patterns for different data types
+patterns = {
+    'date': r'\d{1,2}/\d{1,2}/\d{2}|\d{1,2}-\d{1,2}-\d{2}|\d{4}-\d{1,2}-\d{1,2}',
+    'phone': r'\(?(\d{3})\)?[-. ]?(\d{3})[-. ]?(\d{4})',
+    'email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+}
+
+def load_url_data(url):
+    try:
+        df = pd.read_html(url)[0]
+        return df
+    except Exception as e:
+        logging.error(f"Error loading URL data: {e}")
+        return pd.DataFrame()
+
+def load_data(data_source, uploaded_file):
+    try:
+        if data_source == "CSV":
+            df = pd.read_csv(uploaded_file)
+        elif data_source == "Excel":
+            df = pd.read_excel(uploaded_file)
+        else:
+            raise ValueError("Invalid data source")
+        return df
+    except Exception as e:
+        logging.error(f"Error loading file data: {e}")
+        return pd.DataFrame()
+
+def generate_regex_patterns(df):
+    regex_patterns = {}
+    for column in df.columns:
+        unique_values = df[column].dropna().unique()
+        regex_patterns[column] = generate_regex_for_column(unique_values)
+    return regex_patterns
+
+def generate_regex_for_column(column_data):
+    regex_patterns = []
+    for value in column_data:
+        for pattern in patterns.values():
+            if re.match(pattern, str(value)):
+                regex_patterns.append(pattern)
+                break
+    return '|'.join(regex_patterns) if regex_patterns else None
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        try:
+            data_source = request.form.get('data_source')
+            uploaded_file = request.files.get('file')
+            url = request.form.get('url')
+
+            if data_source == "Enter URL" and url:
+                df = load_url_data(url)
+            elif uploaded_file:
+                df = load_data(data_source, uploaded_file)
+            else:
+                return render_template('index.html', error="Please upload a file or enter a URL.")
+
+            if not df.empty:
+                regex_patterns = generate_regex_patterns(df)
+                return render_template('results.html', df=df.to_html(index=False), regex_patterns=regex_patterns)
+            else:
+                return render_template('index.html', error="Failed to load data. Please check your input.")
+        except Exception as e:
+            logging.error(f"Error in POST request: {e}")
+            return render_template('index.html', error="An unexpected error occurred.")
+
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)

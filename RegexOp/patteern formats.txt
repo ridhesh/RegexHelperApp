@@ -1,0 +1,447 @@
+add all i told: import streamlit as st
+import pandas as pd
+import re
+
+# Predefined regex patterns for common data formats
+patterns = {
+    'address': [
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s\w+(?:\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # 123 Main St, City, State, 12345
+        r'\d{1,5}\s\w+(?:\s\w+)*\s[A-Za-z\s]+,\s[A-Za-z\s]+,\s\d{5,6}',    # 123 Main St City, State, 12345
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+,\s\d{5}',  # 123 Main Street, Some Area, City, 12345
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # 123 Main St, City, 12345
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s[A-Za-z\s]+(?:\s\w+)*\s\d{5,6}',  # 123 Main, Springfield IL 12345
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+(?:\s\w+)*,\s\d{5,6}',  # 123 Main Street, City, State, 12345
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s[A-Za-z\s]+,\s\d{5}[-\s]?\d{4}',  # 123 Main St, City, 12345-6789
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+,\s\d{5}-\d{4}',  # 123 Main Street, City, State, 12345-6789
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s\w+(?:\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # 123 Main St, Springfield IL, 12345
+        r'\d{1,5}\s[\w\s]+,\s[A-Za-z\s]+(?:\s\w+)*,\s\d{5,6}',  # 123 Main St, City, 12345
+        r'\d{1,5}\s\w+(?:\s\w+)*\s[A-Za-z\s]+,\s\d{5}'  # 123 Main St City, 12345
+    ],
+    'date': [
+        r'\d{2}/\d{2}/\d{4}',  # MM/DD/YYYY
+        r'\d{4}-\d{2}-\d{2}',  # YYYY-MM-DD
+        r'\d{2}-\d{2}-\d{4}',  # DD-MM-YYYY
+        r'^\d{4}[-/]\d{2}[-/]\d{2}$',  # YYYY-MM-DD or YYYY/MM/DD
+        r'^\d{2}[-/]\d{2}[-/]\d{4}$',  # DD-MM-YYYY or MM-DD-YYYY
+        r'^\d{1,2} \w{3} \d{4}$',      # DD MMM YYYY
+        r'^\d{1,2}[-/]\d{2}$',         # DD-MM or MM-DD
+        r'^\d{4}$',                    # YYYY
+        r'^\d{1,2} \w{3}$',            # DD MMM
+        r'^\d{1,2}[-/]\d{1,2}[-/]\d{4}$',  # DD-MM-YYYY or MM-DD- YYYY
+        r'^\d{4}[-/]\d{1,2}[-/]\d{1,2}$',  # YYYY-MM-DD or YYYY/MM/DD
+        r'^\d{1,2}[-/]\d{1,2}[-/]\d{4}$',  # DD-MM-YYYY or DD/MM/YYYY
+        r'^\d{4}$',                    # YYYY (e.g., 2023)
+        r'^\d{2}[-/]\d{2}$',           # MM-DD or MM/DD
+        r'^\d{1,2} \w{3}$',            # e.g., 5 Oct
+        r'^\d{1,2}[-/]\d{2}$',         # DD-MM or DD/MM
+        r'^\d{4}[-/]\d{1,2}[-/]\d{1,2}$',  # Date format
+        r'^\d{2}[-/]\d{2}[-/]\d{4}$',  # e.g., 01-01-2020
+        r'^\d{1,2}[-/]\d{2}[-/]\d{2}$',  # DD-MM-YY
+    ],
+    'phone': [
+        r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',  # (XXX) XXX-XXXX or XXX-XXX-XXXX
+        r'^\(\d{3}\) \d{3}-\d{4}$',  # (123) 456-7890
+        r'^\+1 \(\d{3}\) \d{3}-\d{4}$',  # +1 (123) 456-7890
+        r'^\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{4}$',  # +123 4567 8901 or +123-4567-8901
+        r'^\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}',  # General International format
+        r'^\+44 \(\d{2}\) \d{4} \d{4}$',  # UK: +44 (12) 3456 7890
+        r'^\+91 \(\d{5}\) \d{5}$',        # India: +91 (98765) 43210
+        r'^\+55 \(\d{2}\) \d{4} \d{4}$',  # Brazil: +55 (12) 3456 7890
+        r'^\+61 \(\d{1}\) \d{4} \d{4}$',  # Australia: +61 (1) 2345 6789
+        r'^\+33 \(\d{1}\) \d{2} \d{2} \d{2} \d{2}$',  # France: +33 (1) 23 45 67 89
+        r'^\+49 \(\d{2}\) \d{7}$',        # Germany: +49 (12) 3456789
+        r'^\+81 \(\d{2}\) \d{4} \d{4}$',  # Japan: +81 (12) 3456 7890
+        r'^\+86 \(\d{3}\) \d{4} \d{4}$',  # China: +86 (123) 4567 8901
+        r'^\+52 \(\d{1}\) \d{2} \d{4} \d{4}$',  # Mexico: +52 (1) 2345 6789
+        r'^\+27 \(\d{2}\) \d{3} \d{4}$',  # South Africa: +27 (12) 345 6789
+        r'^\+7 \(\d{3}\) \d{3} \d{4}$',   # Russia: +7 (123) 456 7890
+        r'^\+39 \(\d{2}\) \d{7}$',        # Italy: +39 (12) 3456789
+        r'^\+34 \(\d{3}\) \d{3} \d{ 3}$',  # Spain: +34 (123) 456 789
+        r'^\+54 \(\d{9}\)$',              # Argentina: +54 (9123456789)
+        r'^\+57 \(\d{1}\) \d{3} \d{4}$',  # Colombia: +57 (1) 234 5678
+        r'^\+56 \(\d{1}\) \d{7}$',        # Chile: +56 (1) 2345678
+        r'^\+51 \(\d{1}\) \d{7}$',        # Peru: +51 (1) 2345678
+        r'^\+20 \(\d{1}\) \d{3} \d{4}$',  # Egypt: +20 (1) 234 5678
+        r'^\+966 \(\d{2}\) \d{3} \d{4}$',  # Saudi Arabia: +966 (12) 345 6789
+        r'^\+971 \(\d{1}\) \d{7}$',       # UAE: +971 (1) 2345678
+        r'^\+62 \(\d{2}\) \d{4} \d{4}$',  # Indonesia: +62 (12) 3456 7890
+        r'^\+60 \(\d{1}\) \d{4} \d{4}$',  # Malaysia: +60 (1) 2345 6789
+        r'^\+65 \(\d{4}\) \d{4}$',        # Singapore: +65 (1234) 5678
+        r'^\+82 \(\d{2}\) \d{4} \d{4}$',  # South Korea: +82 (12) 3456 7890
+        r'^\+66 \(\d{1}\) \d{3} \d{4}$',  # Thailand: +66 (1) 234 5678
+        r'^\+90 \(\d{3}\) \d{3} \d{4}$',  # Turkey: +90 (123) 456 7890
+        r'^\+234 \(\d{1}\) \d{3} \d{4}$',  # Nigeria: +234 (1) 234 5678
+
+        # Additional Formats
+        r'^\d{4}-\d{3}-\d{4}$',  # 1234-567-8901
+        r'^\(\d{2,4}\) \d{2,4}-\d{4}$',  # (1234) 5678-8901
+        r'^\d{2,4}-\d{2,4}-\d{4}$',  # 1234-5678-8901
+        r'^\(\d{3}\) \d{3}[-.\s]?\d{4} x\d{1,4}$',  # (123) 456-7890 x1234
+        r'^\(\d{3}\) \d{3}\.\d{4} ext\.\s?\d{1,4}$',  # (123) 456.7890 ext. 1234
+        r'^\d{2}-\d{3}-\d{4}$',  # 12-345-6789
+        r'^\(\d{2}\) \d{3}-\d{4}$',  # (12) 345-6789
+        r'^\d{3}[-.\s]?\d{2}[-.\s]?\d{3}$',  # 123-45-678, 123.45.678, 123 45 678
+        r'^\d{3}[-.\s]?\d{4}[-.\s]?\d{3}$',  # 123-4567-890, 123.4567.890
+        r'^\+\d{1,2}-\d{3}-\d{3}-\d{4}$',  # +12-345-678-9012
+        r'^\d{1,3}\(\d{2,3}\)\d{3}-\d{4}$',  # 123(45)678-9012
+        r'^\d{4}-\d{4}-\d{4}$',  # 1234-5678-9012
+    ],
+    'email': [
+        # Standard email formats
+        r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',  # Standard email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$',  # Basic valid email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$',    # Domain with hyphen
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$',     # Numeric TLD or simple domains
+        r'^[a-zA-Z0-9._%+-]+@(\d{1,3}\.){3}\d{1,3}$',          # IP address as domain
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9]+\.[a-zA-Z]{2,}$',  # Catch-all email regex
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',  # General standard email format
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z0-9]+\.[A-Za-z]{2,}$',  # Multi-level subdomains
+        r'^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+)+\.(com|org|net|edu|gov)$',  # Personal email format
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$',  # Hyphenated domain email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9][a-zA-Z0-9.-]{1,}\.[A-Za-z]{2,}$',  # Standard email with valid domain
+
+        # Special formats
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|org|gov|edu|co)\.[A-Za-z]{2,}$',  # Company email format
+        r'^[a-zA-Z0-9._%+-]+@xn--[a-zA-Z0-9-]+\.[A-Za-z]{2,}$',  # Punycode (IDN) domain
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,63}$',  # Long TLD email
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.(xyz|tech|info|online)$',  # Special TLDs
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[\u4e00-\u9fa5]+\.[A-Za-z]{2,}$',  # Mixed ASCII and Chinese
+        r'^[^\x00-\x7F]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$',  # Special Unicode in local part
+
+        # Validations
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[0-9]+$',  # Domain ending in numbers
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[A-Za-z]{2,}$',  # Optional subdomains
+        r'^[a-zA-Z0-9._%+-]+@[^\x00-\x7F]+\.[^\x00-\x7F]+$',  # Domain with unicode characters
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]{1,}\.[A-Za-z]{2,}$',  # Short domain
+        r'^[a-zA-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Za-z]{2,}$',  # Uppercase letters in domain
+        
+        # Complex patterns with elements like quotes ```python
+        r'^"[^"]+"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Quoted local part with special characters
+        r'^[a-zA-Z0-9._%+-]+[!#$%&\'*+/=?^_`{|}~]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Special characters allowed only in local part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\s+(\.[a-zA-Z]{2,})+$',  # Multiple subdomains
+        
+        # Additional edge cases
+        r'^\s+[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}\s+$',  # Leading or trailing whitespace
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[0-9]+$',  # Numeric TLD  
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[\d]+\.[A-Za-z]{2,}$',  # Numeric in domain plus TLD
+        r'^[0-9]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',  # Numeric-only local part
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+[-]?[A-Za-z0-9.-]+$|^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+[-]$',  # Hyphen at the start or end of domain
+
+        # Catch-all and miscellaneous
+        r'^[a-zA-Z0-9._%+-]+(\.{2,})[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$',  # Consecutive dots in local part
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-zA-Z]{1}$',  # Single character TLD
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-zA-Z]{7,}$',  # Long TLD greater than 6 characters
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]{10,}\.[a-zA-Z]{2,}$',  # Long domain name
+    ],
+    'id': [
+        r'^\d{1,10}$',  # Numeric ID: 1234567890
+        r'^[A-Z]{2}\d{4}$',  # Alphanumeric ID: AB1234
+        r'^[A-Z]{3}-\d{4}-[A-Z]$',  # Formatted ID: ABC-1234-X
+        r'^[0-9]{2}-[0-9]{3}-[0-9]{4}$',  # SSN style: 12-345-6789
+        r'^[a-zA-Z0-9]{6,12}$',  # Alphanumeric ID: user123
+        r'^[A-Za-z]{2,5}\d{3,5}$',  # Mixed letters and digits: AB1234 or ABC12
+        r'^[A-Z]{1}\d{1,5}-[A-Z]{1,3}$',  # Format: A12345-XYZ
+        r'^\d{3}\s?[A-Za-z]{2}\s?\d{2,4}$',  # Pattern: 123 AB 1234
+        r'^[A-Z]{2,6}\d{1,5}[-]?\d{0,2}$',  # Variably formatted ID: ABCDEFG12345-12
+        r'^[123][0-9]{1,9}$',  # Starts with 1, 2, or 3 followed by up to 9 digits: 1XXXXX
+    ],
+    'first_name': [
+        r'^[A-Z][a-z]{1,29}$',  # Simple: John
+        r'^[A-Z][a-zA-Z\'-]{1,30}$',  # O'Brien
+        r'^[A-Za-z]+$',  # Any alphabetical characters: MARY
+        r'^[A-Za-z\s]{1,30}$', 
+        # Multiple names: Sarah Jane
+        r'^[A-Z][a-z]+\s[A-Z][a-z]+$',  # First and middle name: John Paul
+        r'^[A-Z]{1}([\'-]?[a-zA-Z]+)*$',  # Names with hyphens/apostrophes: Anne-Marie
+        r'^[A-Z][a-z]{1,50}$',  # Longer first names: Alexander
+        r'^[A-Z]\.[A-Z][a-z]{2,28}$',  # Initial middle name: J.C.
+        r'^[A-Z][a-z]+(-[A-Z][a-z]+)?$',  # Hyphenated names: Smith-Jones
+        r'^[A-Z\s\'-]{1,30}$',  # Names with spaces, apostrophes, hyphens: O’Hara
+    ],
+    'last_name': [
+        r'^[A-Z][a-z]{1,29}$',  # Simple: Smith
+        r'^[A-Z][a-zA-Z\'-]{1,30}$',  # O'Connor
+        r'^[A-Za-z]+$',  # Generic last name: JOHNSON
+        r'^[A-Za-z\s]{1,30}$',  # Last name + spaces: Johnson Taylor
+        r'^[A-Z][a-z]{1,50}$',  # Longer last names
+        r'^[A-Z]{1}([\'-]?[a-zA-Z]+)*$',  # Names with hyphens/apostrophes: O'Reilly
+        r'^[A-Z]\s[A-Z][a-z]{2,28}$',  # Initial middle last name: G. Anderson
+        r'^[A-Z][a-z]+(-[A-Z][a-z]+)?$',  # Hyphenated: Brown-Jones
+        r'^[A-Z][a-zA-Z\s\'-\.]{2,30}$',  # Allowing for more complex characters
+        r'^[A-Z\s\'-.]+$',  # Last names with spaces and special characters: St. Clair
+    ],
+    'age': [
+        r'^(1[89]|[2-9]\d)$',  # Age range 18-99
+        r'^\d{1,2}$',  # Age range 0-99
+        r'^[0-9]{1,3}$',  # General number check
+        r'^(1[0-9]|[2-9][0-9])$',  # Age between 10 and 99
+        r'^(0?[0-9]|[1-9][0-9])$',  # Age 0-99, allows leading zeros
+        r'^[0-9]{2}$',  # Only accepts a two-digit number for ages (00-99)
+        r'^(120|[1-9]?[0-9])$',  # Age up to 120
+        r'^[1-9]?[0-9]$',  # Age not exceeding 99 with leading optional zeros
+        r'(^[1-9]([0-9]|[0-9]{0,2})?)$',  # Explicitly requires valid numbers
+        r'^(0|[1-9][0-9]?)$',  # Valid ages between 0 to 99
+    ],
+    'company_name': [
+        r'^[A-Z][a-zA-Z0-9\s,.&-]{1,49}$',  # Start with a capital letter
+        r'^[A-Z][a-zA-Z0-9\s&-]+$',  # Alphanumeric + spaces & symbols
+        r'^[A-Za-z0-9\s]{1,50}$',  # Simple company names
+        r'^[A-Za-z0-9\s-]+( LLC| Inc| Corp| Ltd)?$',  # Casual format with suffix
+        r'^[A-Z][A-Za-z0-9\s&-]{1,50}$',  # Capitalized start
+        r'^[A-Z][a-z]+(-[A-Z][a-z]+)?( Corp| Inc)$',  # Specific suffix requirement
+        r'^[a-zA-Z\s]{1,50}$',  # Basic names
+        r'^[A-Za-z]{1,50} Co\.?$',  # Company ending with "Co"
+        r'^[a-zA-Z\s&]{1,50},? Ltd\.?$',  # Allow "Ltd" & commas
+        r'^[A-Z][a-zA-Z0-9\s-]+( Group| Partners)?$',  # Accept Group or Partners
+    ],
+    
+    'username': [
+        r'^[a-zA-Z0-9._-]{3,15}$',  # Username with letters, numbers, periods, underscores, and hyphens (3-15 characters)
+        r'^[a-zA-Z0-9]{5,20}$',  # Alphanumeric usernames (no special characters)
+        r'^[a-zA-Z0-9]{3,}$',  # Alphanumeric usernames with a minimum length of 3
+    ],
+
+    'password': [
+        r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$',  # Password with at least 8 characters, letters and numbers
+        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$',  # Password with letters, numbers, and special characters
+        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,}$',  # Password with additional symbols
+        r'^[A-Za-z0-9!@#$%^&*]{8,}$',  # Password with special symbols
+    ],
+    'city': [
+        r'^[A-Z][a-zA-Z\s-]{1,49}$',  # Simple city name with initial capital letter: New York
+        r'^[A-Za-z\s]{1,50}$',  # Any alphabetical characters including spaces: Boston
+        r'^[A-Z][a-zA-Z\s.]{1,50}$',  # City names with periods: St. Louis
+        r'^[A-Z][a-zA-Z\s\'-]{1,50}$',  # City names with apostrophes and hyphens: O'Hare
+        r'^[A-Za-z\s\-]{2,50}$',  # Names with both spaces and hyphens
+        r'^[A-Z][a-zA-Z\s&,]{1,50}$',  # Names including commas and ampersands: Los Angeles, CA
+        r'^[A-Z][a-zA-Z\s]{1,49} City$',  # City names ending with "City": Kansas City
+        r'^[A-Za-z\s]{1,50}( (East|West|North|South))?$',  # Names with directional suffixes
+        r'^[A-Za-z\s-]+( Village| Town| County)?$',  # City names with common suffixes
+        r'^[A-Z][a-zA-Z\s]+(?:\s+(?:(East|West|North|South)\s+[A-Z][a-zA-Z\s]+)?)?$',  # City names with modifiers
+        r'^[A-Z][a-zA-Z\s\-]+( Heights| Park| Valley| Lake)?$',  # Specific locality modifiers
+        r'^[A-Z][a-zA-Z\s-]*\s+(North|South|East|West)\s+[A-Z][a-zA-Z\s-]+$',  # Directional modifiers in city names
+        r'^[A-Z][a-zA-Z\s]*\s+(Bay|River|Creek|Hollow)$',  # City names that end with geographical features
+        r'^[^\d\s][a-zA-Z\s\-]*$',  # Ensuring names do not start with a digit or whitespace
+        r'^[A-Z][a-z]+(\s+[A-Z][a-z]+)?( City| City Center| Town)?$',  # Names with optional "City" or "Town"
+        r'^[A-Z][a-zA-Z\.\s&-]*$',  # Cities with formal names including periods and ampersands
+    ],
+    'country': [
+        r'^[A-Z][a-zA-Z\s-]{1,49}$',  # Simple country name with initial capital letter: United States
+        r'^[A-Za-z\s]{1,50}$',  # Any alphabetical characters including spaces: Argentina
+        r'^[A-Z][a-zA-Z\s.,-]{1,50}$',  # Country names with periods, commas, or hyphens: Côte d’Ivoire
+        r'^[A-Z][a-zA-Z\s\'-]{1,50}$',  # Names with apostrophes and hyphens: Saint Vincent
+        r'^[A-Za-z\s\-]+$',  # Names purely with spaces and hyphens
+        r'^[A-Z][a-zA-Z\s\.]{1,50}$',  # Names with periods: Antigua and Barbuda
+        r'^[A-Z][a-zA-Z\s]+( Republic| Kingdom| Federation)?$',  # Optional common suffixes
+        r'^[A-Za-z\s]{1,50}( (of|and|the|or) [A-Z][a-zA-Z\s]{1,50})?$',  # Phrases with "of" or "and"
+        r'^[A-Z][a-z]+( (island|land|nation|state))?$',  # Common suffixes for countries
+        r'^[A-Z][a-zA-Z\s-]+( (Islands|Republic|States|Union|Confederation))?$',  # Names with common geopolitical designations
+        r'^[A-Z][a-zA-Z\'\s]{1,50} (Country|State|Region)$',  # Names that include general identifiers
+        r'^[A-Z][a-zA-Z\s&-]*\s+(and|of)\s+[A-Z][a-zA-Z\s]+$',  # Names with conjunctions
+        r'^[A-Z][a-zA-Z\s\-\,\'\.\&]{1,50}$',  # Extended options for special characters
+        r'^[A-Za-z\s&()\-]{1,50}( Republic)?$',  # Names possibly ending with "Republic"
+        r'^[A-Z][a-zA-Z\s]*( (East|West|North|South))?$',  # Optional geographic modifiers
+        r'^[A-Z][a-zA-Z\s-]+( Territory| Dependency)?$',  # Names ended with political areas
+    ],
+    
+    'zipcode': [
+        r'^\d{5}$',  # US ZIP code (5 digits)
+        r'^\d{5}-\d{4}$',  # US ZIP+4 code (5 digits + 4 digits)
+        r'^\d{6}$',  # Indian postal code (6 digits)
+    ],
+
+    'ip_address': [
+        r'^(\d{1,3}\.){3}\d{1,3}$',  # IPv4 address (xxx.xxx.xxx.xxx)
+        r'^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$',  # IPv6 address
+        r'^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',  # Valid IPv4
+    ],
+
+    'currency': [
+        r'^[+-]?[$€₹¥₩₭₵₴₮₱₳₢₫]\d+(?:,\d{3})*(?:\.\d{2})?$',  # General currencies with symbols
+        r'^[+-]?[A-Z]{3}\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Currency code format (e.g., USD 1,000.00)
+        r'^[+-]?\d+(?:,\d{3})*(?:\.\d+)?$',  # Plain number with optional decimal
+        r'^\₣?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Swiss Franc
+        r'^\₽?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Russian Ruble
+        r'^\₴?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ukrainian Hryvnia
+        r'^\₤?\d+(?:,\d{3})*(?:\.\d{2})?$',  # British Pound
+        r'^\₲?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Paraguayan Guarani
+        r'^\₡?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Costa Rican Colón
+        r'^\₷?\d+(?:,\d{3})*(?:\.\d{2})?$',  # West African CFA Franc
+        r'^\₮?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Mongolian Tugrik
+        r'^[R]?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Brazilian Real
+        r'^[R]?\d+(?:,\d{3})*(?:\.\d{2})?$',  # South African Rand
+        r'^\₱?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Philippine Peso
+        r'^\₩?\d+(?:,\d{3})*(?:\.\d{2})?$',  # South Korean Won
+        r'^\₳?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Argentine Peso
+        r'^\INR\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Indian Rupee with INR
+        r'^\AFN\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Afghan Afghani
+        r'^\VND\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Vietnamese Dong
+        r'^\CAD\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Canadian Dollar
+        r'^\MXN\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Mexican Peso
+        r'^\ARS\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Argentine Peso
+        r'^\BRL\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Brazilian Real
+        r'^\HUF\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Hungarian Forint
+        r'^\PLN\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Polish Zloty
+        r'^\KZT\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Kazakhstani Tenge
+        r'^\HRK\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Croatian Kuna
+        r'^\NOK\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Norwegian Krone
+        r'^\CZK\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Czech Koruna
+        r'^\SGD\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Singapore Dollar
+        r'^\ZAR\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # South African Rand
+        r'^\GHS\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ghanaian Cedi
+        r'^\TWD\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # New Taiwan Dollar
+        r'^\EGP\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Egyptian Pound
+        r'^\KHR\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Cambodian Riel with ISO
+        r'^\THB\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Thai Baht
+        r'^\PKR\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Pakistani Rupee
+    ],
+
+    'time': [
+        r'^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d$',              # 24-hour format (HH:MM:SS)
+        r'^(?:[01]?\d|2[0-3]):[0-5]\d$',                      # 24-hour format without seconds (HH:MM)
+        r'^(?:[01]?\d|1[0-2]):[0-5]\d (AM|PM)$',               # 12-hour format (HH:MM AM/PM)
+        r'^(?:[01]?\d|1[0-2]):[0-5]\d:[0-5]\d (AM|PM)$',      # 12-hour format with seconds (HH:MM:SS AM/PM)
+        r'^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d\.[0-9]{3}$',    # 24-hour format with milliseconds (HH:MM:SS.mmm)
+        r'^(?:[01]?\d|2[0-3]):[0-5]\d\.[0-9]{3}$',             # 24-hour with milliseconds (HH:MM.mmm)
+        r'^[0-9]{4}(|:[0-5]\d)(|:[0-5]\d)$',                   # Military time format (HHMM or HHMM:SS)
+        r'^[0-9]{6}$',                                        # Military time format with seconds ( HHMMSS)
+        r'^(?:[01]?\d|2[0-3]):[0-5]\d [A-Za-z]{3}$',          # Time with timezone abbreviation (HH:MM TZ)
+        r'^[A-Za-z]{3}, \d{1,2} \w{3} \d{4} \d{2}:\d{2}:\d{2} \w{3}$',  # RFC 2822 time format
+        r'^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d (GMT|UTC)$',     # Time with GMT/UTC (HH:MM:SS GMT/UTC)
+        r'^(?:[01]?\d|2[0-3]):[0-5]\d (AM|PM) [A-Za-z]{3}$',   # 12-hour with timezone (HH:MM AM/PM TZ)
+        r'^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d (GMT|UTC)$',     # HH:MM:SS with UTC/GMT
+        r'^[0-9]{1,2}:[0-9]{2} [A-Za-z]{3}[+-][0-9]{4}$',      # HH:MM TZ±HHMM
+        r'^[0-9]{8}$',                                         # Time with seconds as 8 digits (HHMMSS)
+        r'^[0-9]{4} (AM|PM)$',                                 # HHMM format with AM/PM
+        r'^[0-9]{4} [A-Za-z]{3} [0-9]{4} \d{2}:\d{2} [A-Za-z]{3}$',  # Full date-time format with weekday
+        r'^[0-9]{2}:[0-9]{2} \((GMT|UTC)\)$',                 # Time in parentheses (HH:MM (GMT))
+        r'^[0-9]{1,2}:[0-9]{2} [A-Za-z]{2}$',                 # Time in short format (H:MM AM/PM)
+        r'^[0-9]{2}:[0-9]{2} (AM|PM) \((GMT|UTC)\)$',         # Time with AM/PM and timezone in parentheses
+        r'^[0-9]{2}:[0-9]{2} (GMT|UTC|GMT[+-][0-9]{1,2})$',   # Time with GMT/UTC or GMT±N
+        r'^[0-9]{2} [0-9]{2} [A-Za-z]{3}$',                    # Simple time without seconds (HH MM TZ)
+        r'^[0-9]{2}:[0-9]{2} [A-Za-z]{3}[+-]?[0-9]{4}$',       # HH:MM TZ±HHMM
+        r'^[0-9]{1,2} [A-Za-z]{3} [0-9]{2}$',                  # Time with timezone (H:MM TZ)
+        r'^[0-9]{1,2}:[0-9]{2} [A-Za-z]{4,6}$',               # Time with long timezone (H:MM TZ)
+        r'^[0-9]{2}:[0-9]{2} [A-Za-z]{3} [+-][0-9]{4}$',      # Time with offset (HH:MM ±HHMM)
+        r'^[0-9]{1,2}:[0-9]{2} (AM|PM) [A-Za-z]{4,6}$',      # 12-hour time with AM/PM and long timezone (H:MM AM/PM TZ)
+        r'^[0-9]{2}:[0-9]{2}:[0-9]{2} (GMT|UTC|GMT[+-][0-9]{1,2})$',  # Full time with GMT/UTC
+        r'^[0-9]{2}:[0-9]{2} [A-Za-z]{5,}$',                     # Time with longer zone abbreviation (HH:MM ...)
+        r'^[0-9]{2}:[0-9]{2}:[0-9]{2} \([A-Za-z]{3}\)$',       # Time in parentheses (HH:MM:SS (GMT))
+        r'^[0-9]{2}:[0-9]{2}:[0-9]{2} [A-Za-z]{4,}$',# Time with seconds and long timezone (HH:MM:SS ...)
+        r'^[0-9]{2}:[0-9]{2} \([A-Za-z]{3}\)$',                 # Time with timezone in parentheses (HH:MM (TZ))
+    ],
+}
+
+# Function to match patterns against values
+def match_patterns(value, pattern_list):
+    for pattern in pattern_list:
+        if re.match(pattern, str(value)):
+            return pattern
+    return None
+
+# Function to generate regex patterns for the data
+def generate_regex_patterns(df):
+    regex_patterns = {}
+    for column in df.columns:
+        column_values = df[column].dropna().unique()
+        column_patterns = []
+
+        for value in column_values:
+            for data_type, type_patterns in patterns.items():
+                matched_pattern = match_patterns(value, type_patterns)
+                if matched_pattern:
+                    column_patterns.append(matched_pattern)
+                    break
+
+        regex_patterns[column] = '|'.join(set(column_patterns)) if column_patterns else "No match found"
+    return regex_patterns
+
+# Streamlit app
+st.title("Regex Pattern Matcher for Tabular Data")
+
+# Input options
+data_source = st.radio(
+    "Select Data Source:",
+    ("Upload CSV", "Upload Excel", "Enter URL")
+)
+
+uploaded_file = None
+url = None
+if data_source == "Enter URL":
+    url = st.text_input("Enter the URL of the table:")
+else:
+    uploaded_file = st.file_uploader("Upload your file:", type=["csv", "xlsx"])
+
+if st.button("Process"):
+    try:
+        # Step 1: Validate URL or file upload
+        if data_source == "Enter URL" and url:
+            # Check for valid URL format
+            if not url.startswith("http://") and not url.startswith("https://"):
+                st.error("Invalid URL format. Please include 'http://' or 'https://'.")
+                st.stop()
+
+            try:
+                df = pd.read_html(url)[0]
+                if df.empty:
+                    st.error("Table not found on the provided URL.")
+                    st.stop()
+            except Exception as e:
+                st.error(f"Failed to load data from URL: {str(e)}")
+                st.stop()
+
+        elif uploaded_file:
+            # Process the uploaded file
+            if data_source == "Upload CSV":
+                try:
+                    df = pd.read_csv(uploaded_file)
+                except Exception as e:
+                    st.error(f"Error loading CSV file: {str(e)}")
+                    st.stop()
+
+            elif data_source == "Upload Excel":
+                try:
+                    df = pd.read_excel(uploaded_file)
+                except Exception as e:
+                    st.error(f"Error loading Excel file: {str(e)}")
+                    st.stop()
+
+            if df.empty:
+                st.error("The uploaded file is empty. Please check the contents.")
+                st.stop()
+
+        else:
+            st.error("Please upload a file or enter a URL.")
+            st.stop()
+
+        # Remove non-ASCII characters from string data
+        df = df.applymap(lambda x: str(x).encode('ascii', errors='replace').decode('ascii') if isinstance(x, str) else x)
+
+        # Generate regex patterns
+        regex_patterns = generate_regex_patterns(df)
+
+        # Display the uploaded data
+        st.subheader("Uploaded Data")
+        st.dataframe(df)
+
+        # Display the generated regex patterns
+        st.subheader("Generated Regex Patterns")
+        if regex_patterns:
+            for column, pattern in regex_patterns.items():
+                st.write(f"**{column}:** {pattern}")
+        else:
+            st.warning("No regex patterns generated.")
+
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {str(e)}")
+# Patterns not shown for brevity
+ dont do this above in # marked add the patterns by matching if else 
+convert all patterns to if else conditions if the pattern or format match to the entry generate regex by adding this to the regex result dynamic regex and send whole code line by line after updating the whole code - 
+I understand the requirement to verify an entire column's entries as a whole and generate a single regex pattern representing the entire column based on the patterns of the data formats present in that column. This would involve analyzing all the values in each column and generating a regex that accurately captures the essence of the data format present.
+
+Let's adjust the code accordingly to accomplish this. The approach will involve the following steps:
+
+Extract unique values from each column.
+Determine a regex pattern that can match all values in the column. For this implementation, we will check all the values in a column against existing patterns, and upon deciding the best matches, we will compose a regex from them.
+Your Streamlit application for dynamic regex validation looks well-structured and provides a lot of useful functionality. However, there are some areas for improvement in terms of robustness, error handling, performance, and user experience. Below is an enhanced version of your code with comments highlighting changes and improvements:
+i told to add one by one all and update by send the whole code line by line

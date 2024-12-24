@@ -1,0 +1,244 @@
+import streamlit as st
+import pandas as pd
+import re
+
+# Predefined regex patterns for common data formats
+patterns = {
+    "id": "id_patterns",  # Updated ID pattern
+    "first_name": r'^[A-Z][a-z]{1,29}$',
+    "last_name": r'^[A-Z][a-z]{1,29}$',
+    "age": r'^(0|[1-9][0-9]|1[01][0-9]|120)$',  # Age pattern (0-120)
+    "company_name": r'^[A-Z][a-zA-Z0-9\s,.&-]{1,49}$',
+    "address": r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+,\s\d{5}',
+    "city": r'^[A-Z][a-zA-Z0-9\s,.&-]{1,49}$',
+    "country": r'^[A-Z][a-zA-Z0-9\s,.&-]{1,49}$',
+    "phone": r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',
+    "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',
+    "date": r'\d{2}/\d{2}/\d{4}',
+}
+
+# Function to match patterns against values
+def match_patterns(value, column_name):
+    # Check if the column name has a predefined pattern
+    if column_name in patterns:
+        if re.match(patterns[column_name], str(value)):
+            return patterns[column_name]
+
+    # Address patterns
+    address_patterns = [
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s\w+(?:\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # Address Type 1
+        r'\d{1,5}\s\w+(?:\s\w+)*\s[A-Za-z\s]+,\s[A-Za-z\s]+,\s\d{5,6}',  # Address Type 2
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+,\s\d{5}',  # Address Type 3
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # Address Type 4
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s[A-Za-z\s]+(?:\s\w+)*\s\d{5,6}',  # Address Type 5
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+(?:\s\w+)*,\s\d{5,6}',  # Address Type 6
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s[A-Za-z\s]+,\s\d{5}[-\s]?\d{4}',  # Address Type 7
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+,\s\d{5}-\d{4}',  # Address Type 8
+        r'\d{1,5}\s\w+(?:\s\w+)*,\s\w+(?:\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # Address Type 9
+        r'\d{1,5}\s[\w\s]+,\s[A-Za-z\s]+(?:\s\w+)*,\s\d{5,6}',  # Address Type 10
+    ]
+
+    # Check for address patterns
+    for pattern in address_patterns:
+        if re.match(pattern, str(value)):
+            return pattern  # Return the regex pattern if a match is found
+
+    # Date patterns
+    date_patterns = [
+        r'\d{2}/\d{2}/\d{4}',  # MM/DD/YYYY
+        r'\d{4}-\d{2}-\d{2}',  # YYYY-MM-DD
+        r'\d{2}-\d{2}-\d{4}',  # DD-MM-YYYY
+        r'^\d{4}[-/]\d{2}[-/]\d{2}$',  # YYYY-MM-DD or YYYY/MM/DD
+        r'^\d{2}[-/]\d{2}[-/]\d{4}$',  # DD-MM-YYYY or MM-DD-YYYY
+        r'^\d{1,2} \w{3} \d{4}$',      # DD MMM YYYY
+        r'^\d{1,2}[-/]\d{2}$',         # DD-MM or MM-DD
+        r'^\d{4}$',                    # YYYY
+        r'^\d{1,2} \w{3}$',            # DD MMM
+        r'^\d{1,2}[-/]\d{1,2}[-/]\d{4}$',  # DD-MM-YYYY or MM-DD-YYYY
+        r'^\d{4}[-/]\d{1,2}[-/]\d{1,2}$',  # YYYY-MM-DD or YYYY/MM/DD
+        r'^\d{1,2}[-/]\d{1,2}[-/]\d{4}$',  # DD-MM-YYYY or DD/MM/YYYY
+        r'^\d{2}[-/]\d{2}[-/]\d{4}$',  # DD-MM-YYYY or MM-DD-YYYY
+        r'^\d{1,2}[-/]\d{2}[-/]\d{2}$',  # DD-MM-YY or DD/MM/YY
+    ]
+
+    for pattern in date_patterns:
+        if re.match(pattern, str(value)):
+            return pattern
+
+    # Phone patterns
+    phone_patterns = [
+        r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',  # (XXX) XXX-XXXX or XXX-XXX-XXXX
+        r'^\(\d{3}\) \d{3}-\d{4}$',  # (123) 456-7890
+        r'^\+1 \(\d{3}\) \d{3}-\d{4}$',  # +1 (123) 456-7890
+        r'^\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{4}$',  # +123 4567 8901 or +123-4567-8901
+        r'^\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}',  # General International format
+        r'^\+44 \(\d{2}\) \d{4} \d{4}$',  # UK: +44 (12) 3456 7890
+        r'^\+91 \(\d{5}\) \d{5}$',        # India: +91 (98765) 43210
+        r'^\+55 \(\d{2}\) \d{4} \d{4}$',  # Brazil: +55 (12) 3456 7890
+        r'^\+61 \(\d{1}\) \d{4} \d{4}$',  # Australia: +61 (1) 2345 6789
+        r'^\+33 \(\d{1}\) \d{2} \d{2} \d{2} \d{2}$',  # France: +33 (1) 23 45 67 89
+        r'^\+49 \(\d{2}\) \d{7}$',        # Germany: +49 (12) 3456789
+        r'^\+81 \(\d{2}\) \d{4} \d{4}$',  # Japan: +81 (12) 3456 7890
+        r'^\+86 \(\d{3}\) \d{4} \d{4}$',  # China: +86 (123) 4567 8901
+        r'^\+52 \(\d{1}\) \d{2} \d{4} \d{4}$',  # Mexico: +52 (1) 2345 6789
+        r'^\+27 \(\d{2}\) \d{3} \d{4}$',  # South Africa: +27 (12) 345 6789
+        r'^\+7 \(\d{3}\) \d{3} \d{4}$',   # Russia: +7 (123) 456 7890
+        r'^\+39 \(\d{2}\) \d{7}$',        # Italy: +39 (12) 3456789
+        r'^\+34 \(\d{3}\) \d{3} \d{3}$',  # Spain: +34 (123) 456 789
+        r'^\+54 \(\d{9}\)$',              # Argentina: +54 (9123456789)
+        r'^\+57 \(\d{1}\) \d{3} \d{4}$',  # Colombia: +57 (1) 234 5678
+        r'^\+56 \(\d{1}\) \d{7}$',        # Chile: +56 (1) 2345678
+        r'^\+51 \(\d{1}\) \d{7}$',        # Peru: +51 (1) 2345678
+        r'^\+20 \(\d{1}\) \d{3} \d{4}$',  # Egypt: +20 (1) 234 5678
+        r'^\+966 \(\d{2}\) \d{3} \d{4}$',  # Saudi Arabia: +966 (12) 345 6789
+        r'^\+971 \(\d{1}\) \d{7}$',       # UAE: +971 (1) 2345678
+        r'^\+62 \(\d{2}\) \d{4} \d{4}$',  # Indonesia: +62 (12) 3456 7890
+        r'^\+60 \(\d{1}\) \d{4} \d{4}$',  # Malaysia: +60 (1) 2345 6789
+        r'^\+65 \(\d{4}\) \d{4}$',        # Singapore: +65 (1234) 5678
+        r'^\+82 \(\d{2}\) \d{4} \d{4}$',  # South Korea: +82 (12) 3456 7890
+        r'^\+66 \(\d{1}\) \d{3} \d{4}$',  # Thailand: +66 (1) 234 5678
+        r'^\+90 \(\d{3}\) \d{3} \d{4}$',  # Turkey: +90 (123) 456 7890
+        r'^\+234 \(\d{1}\) \d{3} \d{4}$',  # Nigeria: +234 (1) 234 5678
+        r'^\d{4}-\d{3}-\d{4}$',  # 1234-567-8901
+        r'^\(\d{2,4}\) \d{2,4}-\d{4}$',  # (1234) 5678-8901
+        r'^\d{2,4}-\d{2,4}-\d{4}$',  # 1234-5678-8901
+        r'^\(\d{3}\) \d{3}[-.\s]?\d{4} x\d{1,4}$',  # (123) 456-7890 x1234
+        r'^\(\d{3}\) \d{3}\.\d{4} ext\.\s?\d{1,4}$',  # (123) 456.7890 ext. 1234
+        r'^\d{2}-\d{3}-\d{4}$',  # 12-345-6789
+        r'^\(\d{2}\) \d{3}-\d{4}$',  # (12) 345-6789
+        r'^\d{3}[-.\s]?\d{2}[-.\s]?\d{3}$',  # 123-45-678, 123.45.678, 123 45 678
+        r'^\d{3}[-.\s]?\d{4}[-.\s]?\d{3}$',  # ```python
+        # 123-4567-890, 123.4567.890
+        r'^\+\d{1,2}-\d{3}-\d{3}-\d{4}$',  # +12-345-678-9012
+        r'^\d{1,3}\(\d{2,3}\)\d{3}-\d{4}$',  # 123(45)678-9012
+        r'^\d{4}-\d{4}-\d{4}$',  # 1234-5678-9012
+    ]
+
+    for pattern in phone_patterns:
+        if re.match(pattern, str(value)):
+            return pattern
+
+    # Email patterns
+    email_patterns = [
+        r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',  # Standard email
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',  # Basic valid email
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9-]+\.[a-zA-Z]{2,}$',    # Domain with hyphen
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9]+\.[a-zA-Z]{2,}$',     # Numeric TLD or simple domains
+        r'^[a-zA-Z0-9._%+-]+@(\d{1,3}\.){3}\d{1,3}$',          # IP address as domain
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9]+\.[a-zA-Z]{2,}$',  # Catch-all email regex
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',  # General standard email format
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z0-9]+\.[A-Za-z]{2,}$',  # Multi-level subdomains
+        r'^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+)+\.(com|org|net|edu|gov)$',  # Personal email format
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[A-Za-z]{2,}$',  # Hyphenated domain email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9][a-zA-Z0-9.-]{1,}\.[A-Za-z]{2,}$',  # Standard email with valid domain
+        # Special formats
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|org|gov|edu|co)\.[A-Za-z]{2,}$',  # Company email format
+        r'^[a-zA-Z0-9._%+-]+@xn--[a-zA-Z0-9-]+\.[A-Za-z]{2,}$',  # Punycode (IDN) domain
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,63}$',  # Long TLD email
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.(xyz|tech|info|online)$',  # Special TLDs
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[\u4e00-\u9fa5]+\.[A-Za-z]{2,}$',  # Mixed ASCII and Chinese
+        r'^[^\x00-\x7F]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$',  # Special Unicode in local part
+        # Validations
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[0-9]+$',  # Domain ending in numbers
+        r'^[a-zA-Z]{2,}$',  # Optional subdomains
+        r'^[a-zA-Z0-9._%+-]+@[^\x00-\x7F]+\.[^\x00-\x7F]+$',  # Domain with unicode characters
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]{1,}\.[A-Za-z]{2,}$',  # Short domain
+        r'^[a-zA-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Za-z]{2,}$',  # Uppercase letters in domain
+        # Complex patterns with elements like quotes
+        r'^"[^"]+"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Quoted local part with special characters
+        r'^[a-zA-Z0-9._%+-]+[!#$%&\'*+/=?^_`{|}~]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Special characters allowed only in local part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\s+(\.[a-zA-Z]{2,})+$',  # Multiple subdomains
+        # Additional edge cases
+        r'^\s+[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}\s+$',  # Leading or trailing whitespace
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[0-9]+$',  # Numeric TLD  
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[\d]+\.[A-Za-z]{2,}$',  # Numeric in domain plus TLD
+        r'^[0-9]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',  # Numeric-only local part
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+[-]?[A-Za-z0-9.-]+$|^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+[-]$',  # Hyphen at the start or end of domain
+        # Catch-all and miscellaneous
+        r'^[a-zA-Z0-9._%+-]+(\.{2,})[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$',  # Consecutive dots in local part
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-zA-Z]{1}$',  # Single character TLD
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-zA-Z]{7,}$',  # Long TLD greater than 6 characters
+        r'^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]{10,}\.[a-zA-Z]{2,}$',  # Long domain name
+    ]
+
+    for pattern in email_patterns:
+        if re.match(pattern, str(value)):
+            return pattern
+
+    return "No match found"
+
+# Streamlit app
+st.title("Dynamic Regex Pattern Matcher")
+
+# Input options
+data_source = st.radio(
+    "Select Data Source:",
+    ("Upload CSV", "Upload Excel", "Enter URL")
+)
+
+uploaded_file = None
+url = None
+if data_source == "Enter URL":
+    url = st.text_input("Enter the URL of the table:")
+else:
+    uploaded_file = st.file_uploader("Upload your file:", type=["csv", "xlsx"])
+
+if st.button("Process"):
+    try:
+        # Step 1: Validate URL or file upload
+        if data_source == "Enter URL" and url:
+            if not url.startswith("http://") and not url.startswith("https://"):
+                st.error("Invalid URL format. Please include 'http://' or 'https://'.")
+                st.stop()
+
+            try:
+                df = pd.read_html(url)[0]
+                if df.empty:
+                    st.error("Table not found on the provided URL.")
+                    st.stop()
+            except Exception as e:
+                st.error(f"Failed to load data from URL: {str(e)}")
+                st.stop()
+
+        elif uploaded_file:
+            if data_source == "Upload CSV":
+                try:
+                    df = pd.read_csv(uploaded_file)
+                except Exception as e:
+                    st.error(f"Error loading CSV file: {str(e)}")
+                    st.stop()
+
+            elif data_source == "Upload Excel":
+                try:
+                    df = pd.read_excel(uploaded_file)
+                except Exception as e:
+                    st.error(f"Error loading Excel file: {str(e)}")
+                    st.stop()
+
+            if df.empty:
+                st.error("The uploaded file is empty. Please check the contents.")
+                st.stop()
+
+        else:
+            st.error("Please upload a file or enter a URL.")
+            st.stop()
+
+        # Remove non-ASCII characters from string data
+        df = df.applymap(lambda x: str(x).encode('ascii', errors='replace').decode('ascii') if isinstance(x, str) else x)
+
+        # Generate regex patterns
+        regex_patterns = {}
+        for column in df.columns:
+            regex_patterns[column] = df[column].apply(lambda x: match_patterns(x, column)).unique()
+
+        # Display the uploaded data
+        st.subheader("Uploaded Data")
+        st.dataframe(df)
+
+        # Display the generated regex patterns
+        st.subheader("Generated Regex Patterns")
+        for column, patterns in regex_patterns.items():
+            st.write(f"**{column}:** {', '.join(filter(None, patterns)) if patterns.size > 0 else 'No match found'}")
+
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {str(e)}")

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Articles</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Random Articles</h1>
+        <div class="row">
+            {% for article in articles %}
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <img src="{{ article.img }}" class="card-img-top" alt="{{ article.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ article.title }}</h5>
+                            <p class="card-text">{{ article.desc }}</p>
+                            <p class="card-text"><small class="text-muted">By {{ article.author }} on {{ article.p_date }}</small></p>
+                            <a href="{{ article.url }}" class="btn btn-primary" target="_blank">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{
+    "filename": "sample-bank-data.csv",
+    "NumberofRows": 24,
+    "Numberoffields": 17,
+    "Format": {
+        "type": "tabular",
+        "Separators": ","
+    },
+    "fields": {
+        "id": {
+            "type": "numeric",
+            "max": 24.0,
+            "min": 1.0
+        },
+        "first_name": {
+            "type": "string",
+            "uniquevals": 24
+        },
+        "last_name": {
+            "type": "string",
+            "uniquevals": 24
+        },
+        "email": {
+            "type": "string",
+            "uniquevals": 24
+        },
+        "age": {
+            "type": "numeric",
+            "max": 66.0,
+            "min": 22.0
+        },
+        "gender": {
+            "type": "string",
+            "uniquevals": 2
+        },
+        "ip_address": {
+            "type": "string",
+            "uniquevals": 24
+        },
+        "Company": {
+            "type": "string",
+            "uniquevals": 24
+        },
+        "income": {
+            "type": "numeric",
+            "max": 484545.0,
+            "min": 15538.8
+        },
+        "married": {
+            "type": "string",
+            "uniquevals": 2
+        },
+        "children": {
+            "type": "numeric",
+            "max": 3.0,
+            "min": 0.0
+        },
+        "car": {
+            "type": "string",
+            "uniquevals": 2
+        },
+        "save_act": {
+            "type": "string",
+            "uniquevals": 2
+        },
+        "current_act": {
+            "type": "string",
+            "uniquevals": 2
+        },
+        "mortgage": {
+            "type": "string",
+            "uniquevals": 2
+        },
+        "pep": {
+            "type": "string",
+            "uniquevals": 2
+        },
+        "debitcard": {
+            "type": "numeric",
+            "max": 9691928949545340.0,
+            "min": 1182387522195850.0
+        }
+    }
+}

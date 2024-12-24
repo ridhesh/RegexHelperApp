@@ -1,0 +1,556 @@
+
+# Predefined regex patterns for common data formats
+patterns = {
+    'address': [
+        r'\d{1,5}\s\w+(\s\w+)*,\s\w+(\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # 123 Main St, City, State, 12345
+        r'\d{1,5}\s\w+(\s\w+)*\s[A-Za-z\s]+,\s[A-Za-z\s]+,\s\d{5,6}',    # 123 Main St City, State, 12345
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+,\s\d{5}',  # 123 Main Street, Some Area, City, 12345
+        r'\d{1,5}\s\w+(\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # 123 Main St, City, 12345
+        r'\d{1,5}\s\w+(\s\w+)*,\s[A-Za-z\s]+(\s\w+)*\s\d{5,6}',  # 123 Main, Springfield IL 12345
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+(\s\w+)*,\s\d{5,6}',  # 123 Main Street, City, State, 12345
+        r'\d{1,5}\s\w+(\s\w+)*,\s[A-Za-z\s]+,\s\d{5}[-\s]?\d{4}',  # 123 Main St, City, 12345-6789
+        r'\d{1,5}\s[\w\s]+,\s[\w\s]+,\s[A-Za-z\s]+,\s\d{5}-\d{4}',  # 123 Main Street, City, State, 12345-6789
+        r'\d{1,5}\s\w+(\s\w+)*,\s\w+(\s\w+)*,\s[A-Za-z\s]+,\s\d{5,6}',  # 123 Main St, Springfield IL, 12345
+        r'\d{1,5}\s[\w\s]+,\s[A-Za-z\s]+(\s\w+)*,\s\d{5,6}',  # 123 Main St, City, 12345
+        r'\d{1,5}\s\w+(\s\w+)*\s[A-Za-z\s]+,\s\d{5}'  # 123 Main St City, 12345
+    ],
+   'date': [
+        r'\d{2}/\d{2}/\d{4}',  # MM/DD/YYYY
+        r'\d{4}-\d{2}-\d{2}',  # YYYY-MM-DD
+        r'\d{2}-\d{2}-\d{4}',  # DD-MM-YYYY
+        r'^\d{4}[-/]\d{2}[-/]\d{2}$',  # YYYY-MM-DD or YYYY/MM/DD
+        r'^\d{2}[-/]\d{2}[-/]\d{4}$',  # DD-MM-YYYY or MM-DD-YYYY
+        r'^\d{1,2} \w{3} \d{4}$',      # DD MMM YYYY
+        r'^\d{1,2}[-/]\d{2}$',         # DD-MM or MM-DD
+        r'^\d{4}$',                    # YYYY
+        r'^\d{1,2} \w{3}$',            # DD MMM
+        r'^\d{1,2}[-/]\d{1,2}[-/]\d{4}$',  # DD-MM-YYYY or MM-DD-YYYY
+        r'^\d{1,2} \w{3} \d{2}$',      # DD MMM YY
+        r'^\d{4}/\d{2}/\d{2}$',        # YYYY/MM/DD
+        r'^\d{1,2}[-/]\d{1,2}$',  # DD-MM or MM-DD
+        r'^\d{1,2} \w{3} \d{4}$',          # Example: 6 Dec 2023
+        r'^\d{4}$',                        # Example: 2023
+        r'^\d{1,2}[-/]\d{2}$',               # Example: 06-12 or 06/12
+        r'^\d{1,2}[-/]\d{1,2}[-/]\d{4}$',  # Example: 6-12-2023 or 6/12/2023
+        r'^\d{4}[-/]\d{1,2}[-/]\d{1,2}$',  # Format: YYYY-MM-DD or YYYY/MM/DD
+        r'^\d{1,2}[-/]\d{1,2}[-/]\d{4}$',  # Format: DD-MM-YYYY or DD/MM/YYYY
+        r'^\d{4}$',                        # Format: YYYY (e.g., 2023)
+        r'^\d{2}[-/]\d{2}$',               # Format: MM-DD or MM/DD
+        r'^\d{1,2} \w{3}$',                # Format: D MMM (e.g., 5 Oct)
+        r'^\d{1,2}[-/]\d{2}$',             # Format: DD-MM or DD/MM
+        r'^\d{4}[-/]\d{1,2}[-/]\d{1,2}$',  # 4 digits, - or /, 1-2 digits, - or /, 1-2 digits
+        r'^\d{2}[-/]\d{2}[-/]\d{4}$',      # Two digits, - or /, two digits, - or /, four digits
+        r'^\d{1,2}[-/]\d{1,2}$',           # Format: DD/MM or MM/DD (e.g., 01/01 or 01-01)
+        r'^\d{1,2}\s\w{3,9}\s\d{4}$',      # Format: DD Month YYYY (e.g., 01 January 2020)
+        r'^\d{1,2}[-/]\d{2}$',             # Format: DD-MM or MM-DD (e.g., 01/01 or 01-01)
+        r'^\d{1,2}[\s-]\w{3}[\s-]\d{4}$',  # Format: DD-MMM-YYYY or DD MMM YYYY (e.g., 01-Jan-2020)
+        r'^\d{4}-\d{2}$',                 # Format: YYYY-MM (e.g., 2020-01)
+        r'^\d{2}-\d{4}$',                 # Format: MM-YYYY (e.g., 01-2020)
+        r'^\d{4}$',                       # Format: YYYY (e.g., 2020)
+        r'^\d{2}-\d{2}-\d{4}$',           # Format: DD-MM-YYYY (e.g., 01-01-2020)
+        r'^\d{4}-\d{2}-\d{2}$',           # Format: YYYY-MM-DD (e.g., 2020-01-01)
+        r'^\d{2}/\d{2}/\d{4}$',           # Format: DD/MM/YYYY (e.g., 01/01/2020)
+        r'^\d{2}/\d{2}/\d{2}$',           # Format: DD/MM/YY (e.g., 01/01/20)
+        r'^\d{4}/\d{2}/\d{2}$',           # Format: YYYY/MM/DD (e.g., 2020/01/01)
+        r'^\d{2}-\d{2}-\d{2}$',           # Format: DD-MM-YY (e.g., 01-01-20)
+        r'^\d{4}-\d{4}$',                 # Format: YYYY-YYYY (e.g., 2020-2021)
+        r'^\d{2}-\d{4}-\d{2}$',           # Format: MM-YYYY-DD (e.g., 01-2020-01)
+        r'^\d{4}-\d{2}-\d{2}-\d{4}$',     # Format: YYYY-MM-DD-YYYY (e.g., 2020-01-01-2021)
+        r'^\d{4}-\d{4}-\d{2}$',           # Format: YYYY-YYYY-MM (e.g., 2020-2021-01)
+        r'^\d{4}\s\w{3,9}\s\d{2}$',                      # Format: YYYY Month DD (e.g., 2020 January 01)
+        r'^\d{1,2}[-/]\d{1,2}[-/]\d{4}\s\d{1,2}:\d{2}$',  # Format: DD-MM-YYYY HH:MM (e.g., 01-01-2020 12:30)
+        r'^\d{1,2}\s\w{3,9}[-/]\d{4}$',                  # Format: DD Month-YYYY (e.g., 01 January-2020)
+        r'^\d{2}[-/]\d{2}[-/]\d{4}\s\(\d{1,2}:\d{2}\)$',  # Format: DD/MM/YYYY (HH:MM) (e.g., 01/01/2020 (12:30))
+        r'^\d{4}[-/]\d{2}[-/]\d{2}\s\d{1,2}:\d{2}(\:\d{2})?$', # Format: YYYY-MM-DD HH:MM or YYYY-MM-DD HH:MM:SS (e.g., 2020-01-01 12:30 or 2020-01-01 12:30:45)
+        r'^\d{1,2}\s\w{3,9}\s\d{4}$',                    # Format: DD Month YYYY (e.g., 01 January 2020)
+        r'^\d{1,2}[-/]\d{1,2}$',                         # Format: DD-MM or MM-DD (e.g., 01/01 or 01-01)
+        r'^\d{1,2}[-/]\d{1,2}$',                         # Format: MM-DD or DD-MM (e.g., 01-01 or 01/01)
+        r'^\d{4}-\d{2}-\d{2}$',                         # Format: YYYY-MM-DD (e.g., 2020-01-01)
+        r'^\d{2}[-/]\d{2}[-/]\d{4}$',                   # Format: MM-DD-YYYY (e.g., 01-01-2020)
+        r'^\d{2}[-/]\d{4}$',                             # Format: MM-YYYY (e.g., 01-2020)
+        r'^\d{2}-\d{2}-\d{4}$'                      # Format: MM-DD-YYYY (e.g., 01-01-2020)
+    ],
+    'phone': [
+        r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',  # (XXX) XXX-XXXX or XXX-XXX-XXXX
+        r'\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}',  # International format
+        r'^\(\d{3}\) \d{3}-\d{4}$',  # US Phone Format with parentheses: (123) 456-7890
+        r'^\+1 \(\d{3}\) \d{3}-\d{4}$',  # US Phone Format with country code and parentheses: +1 (123) 456-7890
+        r'^\+44 \(\d{2}\) \d{4} \d{4}$',  # UK Phone Format with parentheses: +44 (12) 3456 7890
+        r'^\+91 \(\d{5}\) \d{5}$',        # India Phone Format with parentheses: +91 (98765) 43210
+        r'^\+55 \(\d{2}\) \d{4} \d{4}$',  # Brazil Phone Format with parentheses: +55 (12) 3456 7890
+        r'^\+61 \(\d{1}\) \d{4} \d{4}$',  # Australia Phone Format with parentheses: +61 (1) 2345 6789
+        r'^\+33 \(\d{1}\) \d{2} \d{2} \d{2} \d{2}$',  # France Phone Format with parentheses: +33 (1) 23 45 67 89
+        r'^\+49 \(\d{2}\) \d{7}$',        # Germany Phone Format with parentheses: +49 (12) 3456789
+        r'^\+81 \(\d{2}\) \d{4} \d{4}$',  # Japan Phone Format with parentheses: +81 (12) 3456 7890
+        r'^\+86 \(\d{3}\) \d{4} \d{4}$',  # China Phone Format with parentheses: +86 (123) 4567 8901
+        r'^\+52 \(\d{1}\) \d{2} \d{4} \d{4}$',  # Mexico Phone Format with parentheses: +52 (1) 2345 6789
+        r'^\+27 \(\d{2}\) \d{3} \d{4}$',  # South Africa Phone Format with parentheses: +27 (12) 345 6789
+        r'^\+7 \(\d{3}\) \d{3} \d{4}$',   # Russia Phone Format with parentheses: +7 (123) 456 7890
+        r'^\+39 \(\d{2}\) \d{7}$',        # Italy Phone Format with parentheses: +39 (12) 3456789
+        r'^\+34 \(\d{3}\) \d{3} \d{3}$',  # Spain Phone Format with parentheses: +34 (123) 456 789
+        r'^\+54 \(\d{9}\)$',  # Argentina Phone Format with parentheses: +54 (9123456789)
+        r'^\+57 \(\d{1}\) \d{3} \d{4}$',  # Colombia Phone Format with parentheses: +57 (1) 234 5678
+        r'^\+56 \(\d{1}\) \d{7}$',        # Chile Phone Format with parentheses: +56 (1) 2345678
+        r'^\+51 \(\d{1}\) \d{7}$',        # Peru Phone Format with parentheses: +51 (1) 2345678
+        r'^\+20 \(\d{1}\) \d{3} \d{4}$',        # Egypt Phone Format with parentheses: +20 (1) 234 5678
+        r'^\+966 \(\d{2}\) \d{3} \d{4}$',  # Saudi Arabia Phone Format with parentheses: +966 (12) 345 6789
+        r'^\+971 \(\d{1}\) \d{7}$',       # UAE Phone Format with parentheses: +971 (1) 2345678
+        r'^\+62 \(\d{2}\) \d{4} \d{4}$',  # Indonesia Phone Format with parentheses: +62 (12) 3456 7890
+        r'^\+60 \(\d{1}\) \d{4} \d{4}$',  # Malaysia Phone Format with parentheses: +60 (1) 2345 6789
+        r'^\+65 \(\d{4}\) \d{4}$',        # Singapore Phone Format with parentheses: +65 (1234) 5678
+        r'^\+82 \(\d{2}\) \d{4} \d{4}$',  # South Korea Phone Format with parentheses: +82 (12) 3456 7890
+        r'^\+66 \(\d{1}\) \d{3} \d{4}$',  # Thailand Phone Format with parentheses: +66 (1) 234 5678
+        r'^\+90 \(\d{3}\) \d{3} \d{4}$',  # Turkey Phone Format with parentheses: +90 (123) 456 7890
+        r'^\+234 \(\d{1}\) \d{3} \d{4}$',  # Nigeria Phone Format with parentheses: +234 (1) 234 5678
+        r'^\d{4}-\d{3}-\d{4}$',  # 1234-567-8901
+        r'^\(\d{2,4}\) \d{2,4}-\d{4}$',  # (1234) 5678-8901
+        r'^\d{2,4}-\d{2,4}-\d{4}$',  # 1234-5678-8901
+        r'^\(\d{3}\) \d{3}\-\d{4} x\d{1,4}$',  # (123) 456-7890 x1234
+        r'^\(\d{3}\) \d{3}\.\d{4} ext\.\s?\d{1,4}$',  # (123) 456.7890 ext. 1234
+        r'^\d{2}-\d{3}-\d{4}$',  # 12-345-6789
+        r'^\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{4}$',  # +123 4567 8901, +123-4567-8901, +123.4567.8901
+        r'^\(\d{2}\) \d{3}-\d{4}$',  # (12) 345-6789
+        r'^\d{3}[-.\s]?\d{2}[-.\s]?\d{3}$',  # 123-45-678, 123.45.678, 123 45 678
+        r'^\+\d{1,3}[-.\s]?\(\d{1,4}\)[-.\s]?\d{3}[-.\s]?\d{4}$',  # +12 (1234) 567-8901
+        r'^\(\d{3}\) \d{3}[-.\s]?\d{4}$',  # (123) 456-7890, (123) 456 7890
+        r'^\d{3}[-.\s]?\d{4}[-.\s]?\d{3}$',  # 123-4567-890, 123.4567.890
+        r'^\+?\d{3}[-.\s]?\d{2}[-.\s]?\d{3}[-.\s]?\d{4}$',  # +123 45 678 9012, +123-45-678-9012
+        r'^\+\d{1,2}-\d{3}-\d{3}-\d{4}$',  # +12-345-678-9012
+        r'^\d{1,3}\(\d{2,3}\)\d{3}-\d{4}$',  # 123(45)678-9012
+        r'^\d{4}-\d{4}-\d{4}$',  # 1234-5678-9012
+        r'^\(\d{1,2}\) \d{3}[-.\s]?\d{4}$',  # (12) 345-6789, (12) 345 6789
+],
+    'email': [
+        r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',  # Standard email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$',    # Domain with hyphen
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$',     # Numeric TLD or simple domains
+        r'^[a-zA-Z0-9._%+-]+@(\d{1,3}\.){3}\d{1,3}$',          # IP address as domain
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$',  # Multiple subdomains
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z]+\.[a-zA-Z]+\.[a-zA-Z]{2,}$',  # Multiple subdomains with TLDs
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # General standard email format
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9]+\.[a-zA-Z]{2,}$',  # Multi-dot domain email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$',  # Incomplete domain email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[0-9]+$',  # Domain ending in numbers
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|edu)$',  # Common domain extensions
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|gov|edu|co)\.[a-zA-Z]{2,}$',  # Company email format
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z0-9]+$',  # Hyphenated domain, numeric TLD
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,63}$',  # Long TLD email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z]{2,})+$',  # Multiple subdomains
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$',  # Catch-all email regex
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # General email with valid domain
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[\u4e00-\u9fa5]+\.[a-zA-Z]{2,}$',  # Mixed ASCII and Chinese
+        r'^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+)+\.(com|org|net|edu)$',  # Personal email format
+        r'^[a-zA-Z0-9._%+-]+@xn--[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Punycode (IDN) domain
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]$',  # Single-character domain email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$',  # Multi-level subdomains
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$',  # Hyphenated domain email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$',  # Standard email format
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z0-9.-]+$',  # Subdomain with hyphen
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Common general email
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[0-9]+$',  # Email with numeric domain
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Final catch-all email regex
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$',  # Catch-all email regex for TLDs
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{3,}$',  # TLD longer than 3 chars
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$',  # Missing TLD email (incorrect)
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Standard email format
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9]{2,}$',  # Domain with digits in TLD
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+-[a-zA-Z0-9]+\.[a-zA-Z]{2,}$',  # Domain part with hyphen
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Domain with numbers
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9_-]+[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Underscores in domain part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{5,}$',  # TLD length > 4
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Multiple dots in domain part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\.[a-zA-Z0-9]+)+\.[a-zA-Z]{2,}$',  # Multiple subdomains
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[0-9]+$',  # Numeric TLD
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9]{2,}$',  # Domain with digits in TLD
+        r'^[a-zA-Z0-9._%+-]+@[^\x00-\x7F]+\.[^\x00-\x7F]+$',  # Domain with unicode characters
+        r'^[^\x00-\x7F]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Special Unicode in local part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]{255}\.[a-zA-Z]{2,}$',  # Max-length domain
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$',  # Final catch-all regex
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+[0-9\-]+\.[a-zA-Z]{2,}$',  # Domain containing numbers and hyphen
+        r'^[a-zA-Z0-9._%+-]+(\.\.[a-zA-Z0-9._%+-]+)*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Multiple consecutive dots in local part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\d+\.[a-zA-Z]{2,}$',  # Domain contains digits
+        r'^[a-zA-Z0-9._%+-]+[!#$%&\'*+/=?^_`{|}~]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Special characters allowed only in local part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$',  # ccTLD (country code top-level domain)
+        r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$',  # Local part contains unicode characters
+        r'^[a-zA-Z0-9._%+-]+[0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Local part contains a number
+        r'^[a-zA-Z0-9._%+-]+[_0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Local part contains underscores and numbers
+        r'^[a-zA-Z0-9._%+-]+(-[a-zA-Z0-9._%+-]+)*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Local part with multiple hyphens
+        r'^[a-zA-Z0-9._%+-]+(-[a-zA-Z0-9._%+-]+)*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Local part starting/ending with hyphen
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Domain part contains non-ASCII characters
+        r'^[a-zA-Z0-9._%+-]+[.]{1}[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Period immediately before @ symbol
+        r'^[a-zA-Z0-9._%+-]+(\.[a-zA-Z0-9._%+-]+)+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Multiple periods and special characters in local part
+        r'^[a-zA-Z0-9._%+-]+@[0-9]+(\.[0-9]+)+\.[a-zA-Z]{2,}$',  # Domain part numeric
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{1}$',  # Single character TLD
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$',  # Special characters in domain part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[0-9]+$',  # Numeric TLD
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{7,}$',  # TLD greater than 6 characters
+        r'^[a-zA-Z0-9._%+-]+[_0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Local part with underscores and numbers
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Mixed-case local part and domain
+        r'^[a-zA-Z0-9._%+-]+@xn--[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$',  # IDN domain in Punycode
+        r'^"[a-zA-Z0-9._%+-]+"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Quoted local part with special characters
+        r'^"[a-zA-Z0-9._%+- ]+"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Quoted local part with spaces
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+[^\x00-\x7F]+\.[a-zA-Z]{2,}$',  # Extended ASCII in domain
+        r'^[a-zA-Z0-9._%+-]+@-[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Dash at domain start
+        r'^[a-zA-Z0-9._%+-]+@[^\x00-\x7F]+[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Mixed Unicode and ASCII in local part
+        r'^"([^"\\]|\\.)+"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Multiple @ symbols in quotes
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9_-]+\.[a-zA-Z]{2,}$',  # Domain with underscores
+        r'^[0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Numeric-only local part
+        r'^"[\x21\x23-\x5B\x5D-\x7E]+"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Quoted local part with special symbols
+        r'^\s+[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s+$',  # Leading or trailing whitespace
+        r'^[^\x00-\x7F]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Unicode emojis in local part
+        r'^[a-zA-Z0-9._%+-]+(\.\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Multiple periods in local part
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(xyz|tech|info|online)$',  # Special TLDs
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+-+\.[a-zA-Z]{2,}$',  # Hyphen at the end of domain name
+        r'^[a-zA-Z0-9._%+-]+@\[[0-9]{1,3}(\.[0-9]{1,3}){3}\]$',  # IP address domain
+        r'^"[^"]+"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Quoted local part with subdomains
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$',  # Mixed case in domain
+        r'^.[a-zA-Z0-9._%+-]+.@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Local part starts and ends with special characters
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+-[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Domain with hyphen-separated subdomains
+        r'^[a-zA-Z0-9._%+-]+@[^\x00-\x7F]+\.[^\x00-\x7F]+\.[^\x00-\x7F]+$',  # Unicode TLD with multiple dots
+        r'^[a-zA-Z0-9._%+-]+(\.[a-zA-Z0-9._%+-]+)+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Repeated sections in local part
+        r'^[a-zA-Z0-9._%+-]+@\[[0-9]{1,3}(\.[0-9]{1,3}){3}\]$',  # IP address as domain
+        r'^"\s*[a-zA-Z0-9._%+-]+\s*"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Whitespace in quoted part of local
+        r'^[a-zA-Z0-9._%+-]+(\.[a-zA-Z0-9._%+-]+)*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Valid email, disallows consecutive dots in local part
+        r'^[0-9][a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Local part starts with a number
+        r"^[a-zA-Z0-9._%+-]+(\.[a-zA-Z0-9._%+-]+)+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Multiple dots in local part
+        r"^[a-zA-Z0-9._%+-]+\+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Plus sign with no additional part
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z]+\.[a-zA-Z]{2,}$",  # Letters only in domain
+        r"^[a-zA-Z0-9._%+-]+@(\d{1,3}\.){3}\d{1,3}$",  # IP address as domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9]{2,}$",  # Domain with numeric extension
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})+$",  # Multiple subdomains
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[\u4e00-\u9fa5]+$",  # Domain with Chinese characters
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+[-]?[a-zA-Z0-9.-]+$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+[-]$",  # Hyphen at the start or end of domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9_-]+\.[a-zA-Z]{2,}$",  # Underscore in domain
+        r"^\d+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Local part is numeric
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})+$",  # Multiple dots in TLD
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\d+\.[a-zA-Z]{2,}$",  # Domain name containing digits
+        r"^[a-zA-Z0-9._%+-]+[.\-+][a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Special characters in local part
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2}$",  # Two-letter country code TLD
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]{10,}\.[a-zA-Z]{2,}$",  # Long domain name
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\.[a-zA-Z]{2,}$",  # International domain with multiple extensions
+        r"^[a-zA-Z0-9._%+-]+([+][a-zA-Z0-9._%+-]+)+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Multiple plus signs in local part
+        r"^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.)+[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Multiple subdomains in domain part
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Non-alphabet characters in domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.\d{3,}$",  # TLD containing digits
+        r"^[a-zA-Z0-9._%+-]+@[A-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Uppercase letters in domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Standard email with letters in domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z][a-zA-Z0-9.-]*\d{1,}\.[a-zA-Z]{2,}$",  # Letter and number domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})+$",  # Multiple extensions in domain
+        r"^[a-zA-Z0-9._%+-]+[^\w\s]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Special characters in local part
+        r"^[a-zA-Z0-9._%+-]+(\.[a-zA-Z0-9._%+-]+)*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Local part with dots
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z.-]+\.[a-zA-Z]{2,}$",  # Domain with no numbers
+        r"^[a-zA-Z0-9._%+-]+(_[a-zA-Z0-9._%+-]+)*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Underscores in local part
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9_-]+\.[a-zA-Z]{2,}$",  # Underscore in domain part
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\d+\.[a-zA-Z]{2,}$",  # Number in domain part
+        r"^[a-zA-Z0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # No special characters in local part
+        r"^[a-zA-Z0-9._%+-]+(\.{2,})[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Consecutive dots in local part
+        r"^[a-zA-Z0-9._%+-]+[0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Numeric character in local part
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Subdomain after '@'
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9._%+-]+\.[a-zA-Z]{2,}$",  # Underscore in domain part
+        r"^[a-zA-Z0-9._%+-]+@[A-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Uppercase letters in domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]{1,}\.[a-zA-Z]{2,}$",  # Very short domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z]+\.[a-zA-Z]{2,}$",  # Domain with letters only
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Multiple periods in domain part
+        r"^[a-zA-Z0-9._%+-]+![a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Exclamation mark in local part
+        r"^[a-zA-Z0-9._%+-]+\?[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Question mark in local part
+        r'^[a-zA-Z0-9._%+-]+(\.[a-zA-Z0-9._%+-]+)*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Valid email, disallows consecutive dots in local part
+        r'^[0-9][a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # Local part starts with a number
+        r"^[a-zA-Z0-9._%+-]+(\.[a-zA-Z0-9._%+-]+)+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Multiple dots in local part
+        r"^[a-zA-Z0-9._%+-]+\+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Plus sign with no additional part
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z]+\.[a-zA-Z]{2,}$",  # Letters only in domain
+        r"^[a-zA-Z0-9._%+-]+@(\d{1,3}\.){3}\d{1,3}$",  # IP address as domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9]{2,}$",  # Domain with numeric extension
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})+$",  # Multiple subdomains
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[\u4e00-\u9fa5]+$",  # Domain with Chinese characters
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+[-]?[a-zA-Z0-9.-]+$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+[-]$",
+    # Hyphen at the start or end of domain
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9_-]+\.[a-zA-Z]{2,}$",  # Underscore in domain
+        r"^\d+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  # Local part is numeric
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})+$",  # Multiple dots in TLD
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\d+\.[a-zA-Z]{2,}$",  # Domain name containing digits
+        r"^[a-zA-Z0-9._%+-]+[.\-+][a-zA-Z0-9._%+-]+@[a-Za-zA-Za-z.-]+\.[\u4e00-\u9fa5]+$",
+    # Special characters in local part
+        r"^[a-zA-Z0-9._%+-]+@[a-Za-zA-Za-z.-]+\.[\u4e00-\u9fa5]+$",  # Standard email with letters in domain
+        r"^[a-zA-Z0-9._%+-]+(@[^\s])+$",  # No spaces in email address
+],
+'integer': [
+        r'^\d+$',  # Positive integers
+        r'^-?\d+$',  # Signed integers
+        r'^[0-9]+$',  # Non-negative integers (excluding negative signs)
+        r'^\d{1,3}$',  # Single to triple digit integers
+],
+
+'float': [
+        r'^\d*\.\d+$',  # Decimal numbers (positive floats)
+        r'^-?\d*\.\d+$',  # Signed decimals (float with optional negative sign)
+        r'^[+-]?\d+\.\d+$',  # Float numbers with explicit signs (+ or -)
+        r'^\d+\.\d{1,2}$',  # Float with two decimal places (e.g., currency)
+        r'^\d+(\.\d{1,2})?$',  # Decimal with optional decimal part (e.g., 123.45 or 123)
+],
+
+'decimal': [
+        r'^\d+\.\d+$',  # Decimal numbers
+        r'^\d{1,3}(?:,\d{3})*(?:\.\d+)?$',  # Decimal with comma separators (e.g., 1,000.50)
+        r'^[+-]?\d{1,3}(?:,\d{3})*(?:\.\d+)?$',  # Signed decimal with commas (e.g., -1,000.50)
+],
+
+'url': [
+        r'^(https?|ftp)://[^\s/$.?#].[^\s]*$',  # HTTP or HTTPS URL
+        r'^www\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',  # URL starting with 'www'
+        r'^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$',  # Domain name (e.g., example.com)
+        r'^(https?|ftp):\/\/[^\s]+$',  # Any URL starting with http(s) or ftp
+],
+
+'name': [
+        r'^[A-Z][a-z]+$',  # Capitalized first name or last name
+        r'^[A-Za-z]+\s[A-Za-z]+$',  # Full name (first and last name)
+        r'^[A-Za-z]+\s[A-Za-z]+\s[A-Za-z]+$',  # Full name with middle name
+        r'^[A-Za-z]+[\s-][A-Za-z]+[\s-]?[A-Za-z]+$',  # Full name with hyphenated or middle name
+        r'^[A-Za-z]+(\s[A-Za-z]+){1,2}$',  # First name, optional middle name, last name
+],
+
+'username': [
+        r'^[a-zA-Z0-9._-]{3,15}$',  # Username with letters, numbers, periods, underscores, and hyphens (3-15 characters)
+        r'^[a-zA-Z0-9]{5,20}$',  # Alphanumeric usernames (no special characters)
+        r'^[a-zA-Z0-9]{3,}$',  # Alphanumeric usernames with a minimum length of 3
+],
+
+'password': [
+        r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$',  # Password with at least 8 characters, letters and numbers
+        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$',  # Password with letters, numbers, and special characters
+        r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,}$',  # Password with additional symbols
+        r'^[A-Za-z0-9!@#$%^&*]{8,}$',  # Password with special symbols
+],
+
+'zipcode': [
+        r'^\d{5}$',  # US ZIP code (5 digits)
+        r'^\d{5}-\d{4}$',  # US ZIP+4 code (5 digits + 4 digits)
+        r'^\d{6}$',  # Indian postal code (6 digits)
+],
+
+'ip_address': [
+        r'^(\d{1,3}\.){3}\d{1,3}$',  # IPv4 address (xxx.xxx.xxx.xxx)
+        r'^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$',  # IPv6 address
+        r'^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',  # Valid IPv4
+],
+
+'currency': [
+        r'^\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # US Dollar (e.g., $1,000.00)
+        r'^\€?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Euro (e.g., €1,000.00)
+        r'^\₹?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Indian Rupee (e.g., ₹1,000.00)
+        r'^[A-Za-z]{1,3}\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Generic currency (e.g., USD 1,000.00)
+],
+'time':[
+r'^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d$',              # 24-hour format (HH:MM:SS)
+    r'^(?:[01]?\d|2[0-3]):[0-5]\d$',                      # 24-hour format without seconds (HH:MM)
+    r'^(?:[01]?\d|1[0-2]):[0-5]\d (AM|PM)$',               # 12-hour format (HH:MM AM/PM)
+    r'^(?:[01]?\d|1[0-2]):[0-5]\d:[0-5]\d (AM|PM)$',      # 12-hour format with seconds (HH:MM:SS AM/PM)
+    r'^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d\.[0-9]{3}$',    # 24-hour format with milliseconds (HH:MM:SS.mmm)
+    r'^(?:[01]?\d|2[0-3]):[0-5]\d\.[0-9]{3}$',             # 24-hour with milliseconds (HH:MM.mmm)
+    r'^[0-9]{4}(|:[0-5]\d)(|:[0-5]\d)$',                   # Military time format (HHMM or HHMM:SS)
+    r'^[0-9]{6}$',                                        # Military time format with seconds (HHMMSS)
+    r'^(?:[01]?\d|2[0-3]):[0-5]\d [A-Za-z]{3}$',          # Time with timezone abbreviation (HH:MM TZ)
+    r'^[A-Za-z]{3}, \d{1,2} \w{3} \d{4} \d{2}:\d{2}:\d{2} \w{3}$',  # RFC 2822 time format
+    r'^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d (GMT|UTC)$',     # Time with GMT/UTC (HH:MM:SS GMT/UTC)
+    r'^(?:[01]?\d|2[0-3]):[0-5]\d (AM|PM) [A-Za-z]{3}$',   # 12-hour with timezone (HH:MM AM/PM TZ)
+    r'^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d (GMT|UTC)$',     # HH:MM:SS with UTC/GMT
+    r'^[0-9]{1,2}:[0-9]{2} [A-Za-z]{3}[+-][0-9]{4}$',      # HH:MM TZ±HHMM
+    r'^[0-9]{8}$',                                         # Time with seconds as 8 digits (HHMMSS)
+    r'^[0-9]{4} (AM|PM)$',                                 # HHMM format with AM/PM
+    r'^[0-9]{4} [A-Za-z]{3} [0-9]{4} \d{2}:\d{2} [A-Za-z]{3}$',  # Full date-time format with weekday
+    r'^[0-9]{2}:[0-9]{2} \((GMT|UTC)\)$',                 # Time in parentheses (HH:MM (GMT))
+    r'^[0-9]{1,2}:[0-9]{2} [A-Za-z]{2}$',                 # Time in short format (H:MM AM/PM)
+    r'^[0-9]{2}:[0-9]{2} (AM|PM) \((GMT|UTC)\)$',         # Time with AM/PM and timezone in parentheses
+    r'^[0-9]{2}:[0-9]{2} (GMT|UTC|GMT[+-][0-9]{1,2})$',   # Time with GMT/UTC or GMT±N
+    r'^[0-9]{2} [0-9]{2} [A-Za-z]{3}$',                    # Simple time without seconds (HH MM TZ)
+    r'^[0-9]{2}:[0-9]{2} [A-Za-z]{3}[+-]?[0-9]{4}$',       # HH:MM TZ±HHMM
+    r'^[0-9]{1,2} [A-Za-z]{3} [0-9]{2}$',                  # Time with timezone (H:MM TZ)
+    r'^[0-9]{1,2}:[0-9]{2} [A-Za-z]{4,6}$',               # Time with long timezone (H:MM TZ)
+    r'^[0-9]{2}:[0-9]{2} [A-Za-z]{3} [+-][0-9]{4}$',      # Time with offset (HH:MM ±HHMM)
+    r'^[0-9]{1,2}:[0-9]{2} (AM|PM) [A-Za-z]{4,6}$',      # 12-hour time with AM/PM and long timezone (H:MM AM/PM TZ)
+    r'^[0-9]{2}:[0-9]{2}:[0-9]{2} (GMT|UTC|GMT[+-][0-9]{1,2})$',  # Full time with GMT/UTC
+    r'^[0-9]{2}:[0-9]{2} [A-Za-z]{5,}$',                     # Time with longer zone abbreviation (HH:MM ...)
+    r'^[0-9]{2}:[0-9]{2}:[0-9]{2} \([A-Za-z]{3}\)$',       # Time in parentheses (HH:MM:SS (GMT))
+    r'^[0-9]{2}:[0-9]{2}:[0-9]{2} [A-Za-z]{4,}$',           # Time with seconds and long timezone (HH:MM:SS ...)
+    r'^[0-9]{2}:[0-9]{2} \([A-Za-z]{3}\)$',                 # Time with timezone in parentheses (HH:MM (TZ))
+],
+'hex_color': [
+        r'^#[0-9A-Fa-f]{6}$',  # HEX color code (6 digits, e.g., #FFFFFF)
+        r'^#[0-9A-Fa-f]{3}$',  # HEX shorthand color code (3 digits, e.g., #FFF)
+],
+'currency': [
+        r'^\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # US Dollar format (e.g., $1,000.00)
+        r'^\€?\d+(?:\.\d{3})*(?:,\d{2})?$',  # Euro format (e.g., €1.000,00)
+        r'^\₹?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Indian Rupee format (e.g., ₹1,000.00)
+        r'^\¥?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Japanese Yen format (e.g., ¥1,000)
+        r'^[A-Z]{3}\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Currency code format (e.g., USD 1,000.00)
+        r'^[+-]?\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Positive or negative US Dollar
+        r'^[+-]?\€?\d+(?:\.\d{3})*(?:,\d{2})?$',  # Positive or negative Euro
+        r'^[+-]?\₹?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Positive or negative Indian Rupee
+        r'^[+-]?\¥?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Positive or negative Japanese Yen
+        r'^\d+(?:,\d{3})*(?:\.\d+)?$',  # Plain number with optional decimal
+
+    # Additional formats:
+        r'^\₣?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Swiss Franc format (e.g., ₣1,000.00)
+        r'^\₽?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Russian Ruble format (e.g., ₽1,000.00)
+        r'^\₴?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ukrainian Hryvnia format (e.g., ₴1,000.00)
+        r'^\₤?\d+(?:,\d{3})*(?:\.\d{2})?$',  # British Pound format (e.g., ₤1,000.00)
+        r'^\₵?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ghanaian Cedi format (e.g., ₵1,000.00)
+        r'^\₮?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Mongolian Tugrik format (e.g., ₮1,000.00)
+        r'^\₩?\d+(?:,\d{3})*(?:\.\d{2})?$',  # South Korean Won format (e.g., ₩1,000.00)
+        r'^[+-]?\₣?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Positive or negative Swiss Franc
+        r'^[+-]?\₽?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Positive or negative Russian Ruble
+        r'^[+-]?\₴?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Positive or negative Ukrainian Hryvnia
+        r'^[+-]?\₤?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Positive or negative British Pound
+        r'^\₲?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Paraguayan Guarani format (e.g., ₲1,000.00)
+        r'^\₡?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Costa Rican Colón format (e.g., ₡1,000.00)
+        r'^\៛?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Cambodian Riel format (e.g., ៛1,000.00)
+        r'^\₾?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Georgian Lari format (e.g., ₾1,000.00)
+        r'^\₲?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Paraguayan Guarani format (e.g., ₲1,000.00)
+        r'^\₿?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Bitcoin format (e.g., ₿1,000.00)
+        r'^\₯?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Macedonian Denar format (e.g., ₯1,000.00)
+        r'^\₱?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Philippine Peso format (e.g., ₱1,000.00)
+        r'^\₪?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Israeli New Shekel format (e.g., ₪1,000.00)
+        r'^\₳?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Argentine Peso format (e.g., ₳1,000.00)
+         r'^\₱?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Philippine Peso format (e.g., ₱1,000.00)
+        r'^\₸?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Kazakhstani Tenge format (e.g., ₸1,000.00)
+        r'^\៛?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Cambodian Riel format (e.g., ៛1,000.00)
+        r'^\₣?\d+(?:,\d{3})*(?:\.\d{2})?$',  # French Franc (pre-Euro format) (e.g., ₣1,000.00)
+        r'^\₴?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ukrainian Hryvnia format (e.g., ₴1,000.00)
+        r'^\₾?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Georgian Lari format (e.g., ₾1,000.00)
+        r'^\₮?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Mongolian Tugrik format (e.g., ₮1,000.00)
+        r'^\₴?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ukrainian Hryvnia format (e.g., ₴1,000.00)
+        r'^\₳?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Argentine Peso format (e.g., ₳1,000.00)
+        r'^\₿?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Bitcoin format (e.g., ₿1,000.00)
+        r'^\₹?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Indian Rupee format (e.g., ₹1,000.00)
+        r'^\₤?\d+(?:,\d{3})*(?:\.\d{2})?$',  # British Pound format (e.g., ₤1,000.00)
+        r'^\₡?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Costa Rican Colón format (e.g., ₡1,000.00)
+        r'^\₷?\d+(?:,\d{3})*(?:\.\d{2})?$',  # West African CFA Franc format (e.g., ₷1,000.00)
+        r'^\฿?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Thai Baht format (e.g., ฿1,000.00)
+        r'^\₣?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Central African CFA Franc format (e.g., ₣1,000.00)
+        r'^\₽?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Russian Ruble format (e.g., ₽1,000.00)
+        r'^\₵?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ghanaian Cedi format (e.g., ₵1,000.00)
+        r'^\₲?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Paraguayan Guarani format (e.g., ₲1,000.00)
+        r'^\₴?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ukrainian Hryvnia format (e.g., ₴1,000.00)
+        r'^\₣?\d+(?:,\d{3})*(?:\.\d{2})?$',  # CFA Franc format (e.g., CFA 1,000.00)
+        r'^\₩?\d+(?:,\d{3})*(?:\.\d{2})?$',  # South Korean Won format (e.g., ₩1,000.00)
+        r'^\₪?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Israeli New Shekel format (e.g., ₪1,000.00)
+        r'^\₯?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Macedonian Denar format (e.g., ₯1,000.00)
+        r'^\₱?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Philippine Peso format (e.g., ₱1,000.00)
+        r'^\₴?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Ukrainian Hryvnia format (e.g., ₴1,000.00)
+        r'^\₷?\d+(?:,\d{3})*(?:\.\d{2})?$',  # West African CFA Franc (e.g., ₷1,000.00)
+        r'^\₮?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Mongolian Tugrik (e.g., ₮1,000.00)
+         r'^\€?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Euro symbol at the beginning (e.g., €1,000.00)
+        r'^\d+(?:,\d{3})*(?:\.\d{2})?\€$',  # Euro symbol at the end (e.g., 1,000.00€)
+        r'^\Kz?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Angolan Kwanza format (e.g., Kz1,000.00)
+        r'^\zł?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Polish Zloty format (e.g., zł1,000.00)
+        r'^\Bs?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Venezuelan Bolivar format (e.g., Bs1,000.00)
+        r'^\R?\d+(?:,\d{3})*(?:\.\d{2})?$',  # South African Rand format (e.g., R1,000.00)
+        r'^\N?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Nigerian Naira format (e.g., N1,000.00)
+        r'^\D?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Djiboutian Franc format (e.g., D1,000.00)
+        r'^\Z?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Zambian Kwacha format (e.g., Z1,000.00)
+        r'^\G?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Guyanese Dollar format (e.g., G1,000.00)
+        r'^\৳?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Bangladeshi Taka format (e.g., ৳1,000.00)
+        r'^\؋?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Afghan Afghani format (e.g., ؋1,000.00)
+        r'^\₭?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Lao Kip format (e.g., ₭1,000.00)
+        r'^\R\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Brazilian Real format (e.g., R$1,000.00)
+        r'^\Q?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Guatemalan Quetzal format (e.g., Q1,000.00)
+        r'^\RD\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Dominican Peso format (e.g., RD$1,000.00)
+        r'^\TT\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Trinidad and Tobago Dollar format (e.g., TT$1,000.00)
+        r'^\MOP\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Macanese Pataca format (e.g., MOP$1,000.00)
+        r'^\KM?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Bosnian Convertible Mark format (e.g., KM1,000.00)
+        r'^\C\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Nicaraguan Cordoba format (e.g., C$1,000.00)
+        r'^\kn?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Croatian Kuna format (e.g., kn1,000.00)
+        r'^\ден?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Macedonian Denar in Cyrillic (e.g., ден1,000.00)
+        r'^\₮?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Mongolian Tugrik (e.g., ₮1,000.00)
+        r'^\лв?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Bulgarian Lev format (e.g., лв1,000.00)
+        r'^\S/.\d+(?:,\d{3})*(?:\.\d{2})?$',  # Peruvian Sol format (e.g., S/.1,000.00)
+        r'^\Kč?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Czech Koruna format (e.g., Kč1,000.00)
+        r'^\Ft?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Hungarian Forint format (e.g., Ft1,000.00)
+        r'^\L?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Romanian Leu format (e.g., L1,000.00)
+        r'^\MNT?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Mongolian Tugrik with ISO (e.g., MNT1,000.00)
+        r'^\SRD?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Surinamese Dollar format (e.g., SRD1,000.00)
+         # Indian Rupee formats
+        r'^\₹?\d+(?:,\d{2})*(?:\.\d{2})?$',  # Indian Rupee with ₹ symbol at the beginning (e.g., ₹1,00,000.00)
+        r'^\d+(?:,\d{2})*(?:\.\d{2})?\₹$',  # Indian Rupee with ₹ symbol at the end (e.g., 1,00,000.00₹)
+        r'^\INR\s?\d+(?:,\d{2})*(?:\.\d{2})?$',  # Indian Rupee with INR abbreviation (e.g., INR 1,00,000.00)
+
+        # Additional new formats
+        r'^\₦?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Nigerian Naira with symbol (e.g., ₦1,000.00)
+        r'^\AFN?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Afghan Afghani with ISO code (e.g., AFN 1,000.00)
+        r'^\HK\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Hong Kong Dollar (e.g., HK$1,000.00)
+        r'^\NT\$?\d+(?:,\d{3})*(?:\.\d{2})?$',  # New Taiwan Dollar (e.g., NT$1,000.00)
+        r'^\৳?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Bangladeshi Taka with symbol (e.g., ৳1,000.00)
+        r'^\P?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Philippine Peso (e.g., P1,000.00)
+        r'^\₱?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Alternate Philippine Peso format (e.g., ₱1,000.00)
+        r'^\៛?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Cambodian Riel with symbol (e.g., ៛1,000.00)
+        r'^\kr?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Swedish Krona (e.g., kr 1,000.00)
+        r'^\₪?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Israeli Shekel (e.g., ₪1,000.00)
+        r'^\KWD?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Kuwaiti Dinar (e.g., KWD 1,000.00)
+        r'^\BHD?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Bahraini Dinar (e.g., BHD 1,000.00)
+        r'^\QAR?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Qatari Riyal (e.g., QAR 1,000.00)
+        r'^\SAR?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Saudi Riyal (e.g., SAR 1,000.00)
+        r'^\OMR?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Omani Rial (e.g., OMR 1,000.00)
+        r'^\KHR?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Cambodian Riel with ISO (e.g., KHR 1,000.00)
+        r'^\LBP?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Lebanese Pound (e.g., LBP 1,000.00)
+        r'^\JOD?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Jordanian Dinar (e.g., JOD 1,000.00)
+        r'^\EGP?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Egyptian Pound (e.g., EGP 1,000.00)
+        r'^\TND?\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Tunisian Dinar (e.g., TND 1,000.00)
+         r'^\₹\d+(?:,\d{2})+(?:\.\d+)?$',  # Indian Rupee with ₹ and grouping by 2 digits (e.g., ₹12,34,567.89)
+        r'^\INR\.\d+(?:,\d{3})*(?:\.\d{1,2})?$',  # INR with dot separator (e.g., INR.1,234,567.89)
+        r'^\₹\s?\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?$',  # ₹ with optional space and standard grouping (e.g., ₹ 1,23,456.78)
+        # Additional new formats
+        r'^\₩\d+(?:,\d{3})*(?:\.\d+)?$',  # South Korean Won with symbol (e.g., ₩1,000,000)
+        r'^\₭\d+(?:,\d{3})*(?:\.\d+)?$',  # Lao Kip with symbol (e.g., ₭1,000.00)
+        r'^\VND\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Vietnamese Dong (e.g., VND 1,000,000)
+        r'^\₫\d+(?:,\d{3})*(?:\.\d+)?$',  # Vietnamese Dong with symbol (e.g., ₫1,000,000.00)
+        r'^\PKR\s?\d+(?:,\d{3})*(?:\.\d{1,2})?$',  # Pakistani Rupee (e.g., PKR 1,000,000.00)
+        r'^\Rs\s?\d+(?:,\d{3})*(?:\.\d{1,2})?$',  # Rs (generic) (e.g., Rs 1,000,000.00)
+        r'^\₦\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Nigerian Naira with optional space (e.g., ₦ 1,000,000)
+        r'^\USD\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # US Dollar with ISO code (e.g., USD 1,000,000.00)
+        r'^\CAD\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Canadian Dollar (e.g., CAD 1,000,000.00)
+        r'^\MXN\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Mexican Peso (e.g., MXN 1,000,000.00)
+        r'^\R\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # South African Rand (e.g., R 1,000,000.00)
+        r'^\PLN\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Polish Zloty (e.g., PLN 1,000,000.00)
+        r'^\BRL\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Brazilian Real (e.g., BRL 1,000,000.00)
+        r'^\ZAR\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # South African Rand ISO format (e.g., ZAR 1,000,000.00)
+        r'^\CLP\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Chilean Peso (e.g., CLP 1,000,000)
+        r'^\COP\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Colombian Peso (e.g., COP 1,000,000)
+        r'^\ARS\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Argentine Peso (e.g., ARS 1,000,000)
+        r'^\UYU\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Uruguayan Peso (e.g., UYU 1,000,000)
+        r'^\TTD\s?\d+(?:,\d{3})*(?:\.\d{2})?$',  # Trinidad and Tobago Dollar (e.g., TTD 1,000,000.00)
+        r'^\KZT\s?\d+(?:,\d{3})*(?:\.\d+)?$',  # Kazakhstani Tenge (e.g., KZT 1,000,000)
+        
+],
+
+'boolean': [
+        r'^(true|false)$',  # 'true' or 'false'
+        r'^(1|0)$',  # '1' or '0' as boolean values
+        r'^(yes|no)$',  # 'yes' or 'no'
+],
+
+'latitude_longitude': [
+        r'^[+-]?\d{1,2}\.\d{1,6}$',  # Latitude (up to 6 decimal places)
+        r'^[+-]?\d{1,3}\.\d{1,6}$',  # Longitude (up to 6 decimal places)
+],
+
+'uuid': [
+        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',  # UUID format (e.g., 123e4567-e89b-12d3-a456-426614174000)
+],
+
+'credit_card': [
+        r'^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})$',  # General credit card format
+],
+
+'hexadecimal': [
+        r'^[0-9A-Fa-f]+$',  # Hexadecimal numbers
+],
+
+'positive_integer': [
+        r'^[1-9]\d*$',  # Positive integers excluding 0
+],
+
+'negative_integer': [
+        r'^-\d+$',  # Negative integers
+],
+}
